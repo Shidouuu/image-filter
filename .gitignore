@@ -1,0 +1,10 @@
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+*.tif
+*.tiff
+*test.py
+!*mcdermott.png
+!*tree.jpg

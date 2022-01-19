@@ -4,13 +4,21 @@ import os.path
 
 '''Simple function that adds pixels from an image and an
 RGBA tuple or pixels from two images, then returns the modified image.'''
-def add(filter, image, width, height):
+def add(filter, image, rgb=False):
     img = image.load() #Third image instance thing for writing
+    width, height = image.size
 
     #Detects if filter is 'red', 'green', 'blue', or a tuple. 
     #If not, assumes another image is being added.
     if filter in color_list or isinstance(filter, tuple):
-        print("Adding using RGBA tuple...")
+        if rgb == True:
+            print(filter)
+            filter = list(filter)
+            filter.pop(3)
+            filter = tuple(filter)
+            print("Adding using RGB tuple...")
+        else:
+            print("Adding using RGBA tuple...")
         #Using a generator, adds two tuples together then assigns the result to the pixel.
         for i in range(width):
             for j in range(height):
@@ -20,9 +28,10 @@ def add(filter, image, width, height):
                     continue
     else:
         print("Adding using pixels from another image...")
-        with Image.open(filter) as f:
+        with Image.open(filter) as f: 
             i2 = f.load()
-
+            if rgb == True:
+                i2 = i2.convert('RGB')
             #Using a generator, adds two pixels from both images together then assigns the result to a new pixel.
             for i in range(width):
                 for j in range(height):
@@ -34,8 +43,9 @@ def add(filter, image, width, height):
 
 '''Simple function that subtracts pixels from an image and an
 RGBA tuple or pixels from two image, then returns the modified images.'''
-def subtract(filter, image, width, height):
+def subtract(filter, image, rgb=False):
     img = image.load() #Third image instance thing for writing
+    width, height = image.size
 
     #Detects if filter is 'red', 'green', 'blue', or a tuple. 
     #If not, assumes another image is being added.
@@ -59,6 +69,9 @@ def subtract(filter, image, width, height):
         with Image.open(filter) as f:
             i2 = f.load()
 
+            if rgb == True:
+                i2 = i2.convert('RGB')
+
             #Using a generator, adds subtracts two tuples together then assigns the result to the pixel.
             for i in range(width):
                 for j in range(height):
@@ -70,13 +83,21 @@ def subtract(filter, image, width, height):
 
 '''Multiplies the RGBA values from an image and an RGBA tuple or pixels from two images 
 by obtaining the ratio of the tuple/pixel to 255 then multiplying the image by the ratio, then returns the modified image.'''
-def multiply(filter, image, width, height):
+def multiply(filter, image, rgb=False):
     img = image.load() #Third image instance thing for writing
+    width, height = image.size
 
     #Detects if filter is 'red', 'green', 'blue', or a tuple. 
     #If not, assumes another image is being added.
     if filter in color_list or isinstance(filter, tuple):
-        print("Multiplying using RGBA tuple...")
+        if rgb == True:
+            print(filter)
+            filter = list(filter)
+            filter.pop(3)
+            filter = tuple(filter)
+            print("Multiplying using RGB tuple...")
+        else:
+            print("Multiplying using RGBA tuple...")
         for i in range(width):
             for j in range(height):
                 try:
@@ -95,6 +116,8 @@ def multiply(filter, image, width, height):
         print("Multiplying using pixels from another image...")
         with Image.open(filter) as f:
             i2 = f.load()
+            if rgb == True:
+                i2 = i2.convert('RGB')
             for i in range(width):
                 for j in range(height):
                     try:
@@ -113,13 +136,21 @@ def multiply(filter, image, width, height):
 
 '''Divides the RGBA values from an image and an RGBA tuple or pixels from two images 
 by obtaining the ratio of the tuple/pixel to 255 then dividing the image by the ratio, then returns the modified image.'''
-def divide(filter, image, width, height):
+def divide(filter, image, rgb=False):
     img = image.load() #Third image instance thing for writing
+    width, height = image.size
 
     #Detects if filter is 'red', 'green', 'blue', or a tuple. 
     #If not, assumes another image is being added.
     if filter in color_list or isinstance(filter, tuple):
-        print("Dividing using RGBA tuple...")
+        if rgb == True:
+            print(filter)
+            filter = list(filter)
+            filter.pop(3)
+            filter = tuple(filter)
+            print("Dividing using RGB tuple...")
+        else:
+            print("Dividing using RGBA tuple...")
         for i in range(width):
             for j in range(height):
                 try:
@@ -138,6 +169,8 @@ def divide(filter, image, width, height):
         print("Dividing using pixels from another image...")
         with Image.open(filter) as f:
             i2 = f.load()
+            if rgb == True:
+                i2 = i2.convert('RGB')
             for i in range(width):
                 for j in range(height):
                     try:
@@ -155,15 +188,16 @@ def divide(filter, image, width, height):
     return image
 
 '''Function that allows for a secure way to call the functions above. Returns the return values of the functions called.'''
-def func_sel(filter, func, image, width, height):
+def func_sel(filter, func, image, rgb=False):
+    rgb_bool = rgb
     if func == 'add':
-        result = add(filter, image, width, height)
+        result = add(filter, image, rgb=rgb_bool)
     elif func == 'subtract':
-        result = subtract(filter, image, width, height)
+        result = subtract(filter, image, rgb=rgb_bool)
     elif func == 'divide':
-        result = divide(filter, image, width, height)
+        result = divide(filter, image, rgb=rgb_bool)
     elif func == 'multiply':
-        result = multiply(filter, image, width, height)
+        result = multiply(filter, image, rgb=rgb_bool)
     return result
 
 
@@ -186,10 +220,6 @@ if __name__ == '__main__':
             img_sel = None
             continue
 
-
-
-    w, h = im.size
-
     color_strlist = ['red', 'green', 'blue']
     
     img2 = None
@@ -210,12 +240,15 @@ if __name__ == '__main__':
     name = input("Select a name for the image or press enter to use the default name 'result': ")
     if name == '':
         name = 'result'
-    format = (input("Select a format for the image or press enter to export as png. You can also type in a format not on the list and see if that works!\nbmp | gif | png\n")).lower()
+    format = (input("Select a format for the image or press enter to export as png. You can also type in a format not on the list and see if that works!\nbmp | gif | jpg/jpeg | png\n")).lower()
     format_list = ['bmp', 'gif', 'png']
-    if format in format_list:
-        format = "." + format
-    elif format == '':
+    if format == '':
         format = '.png'
+    elif format == 'jpg' or format == 'jpeg':
+        im = im.convert('RGB')
+        format = '.' + format
+    elif format in format_list:
+        format = "." + format
     else:
         print("Exporting to wildcard format...")
         format = '.' + format
@@ -223,16 +256,18 @@ if __name__ == '__main__':
 
     if img2 in color_strlist:
         color_index = color_strlist.index(img2)
-        result = func_sel(color_list[color_index], blend_type, im, w, h)
+        result = func_sel(color_list[color_index], blend_type, im)
     elif os.path.isfile(img2):
-        result = func_sel(img2, blend_type, im, w, h)
+        result = func_sel(img2, blend_type, im)
     else:
         eval = literal_eval(img2)
         if isinstance(eval, tuple):
-            if len(eval) == 4:
-                result = func_sel(eval, blend_type, im, w, h)
+            if format == '.jpg':
+                result = func_sel(eval, blend_type, im, rgb=True)
             elif len(eval) == 3:
-                result = func_sel(eval + (255,), blend_type, im, w, h)
+                result = func_sel(eval + (255,), blend_type, im)
+            elif len(eval) == 4:
+                result = func_sel(eval, blend_type, im)
             else:
                 print("Tuple must be a value of 4 integers.")
         else:

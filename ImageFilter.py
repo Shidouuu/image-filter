@@ -1,10 +1,25 @@
 from PIL import Image
 from ast import literal_eval
 import os.path
+import operator
 
-'''Simple function that adds pixels from an image and an
+#Allows operators to be used for an argument of a function, 
+#letting add/subtract and multiply/divide be combined into one function.
+ 
+'''Computes two numbers using a given operator.'''
+def ops_func(op_char, a, b):
+    ops = {
+    "+": operator.add,
+    "-": operator.sub,
+    "*": operator.mul,
+    "/": operator.truediv
+    }  
+    func = ops[op_char]
+    return func(a, b)
+
+'''Adds or subtracts pixels from an image and an
 RGBA tuple or pixels from two images, then returns the modified image.'''
-def add(filter, image, rgb=False):
+def additive(filter, image, op, rgb=False):
     img = image.load() #Third image instance thing for writing
     width, height = image.size
 
@@ -16,18 +31,32 @@ def add(filter, image, rgb=False):
             filter = list(filter)
             filter.pop(3)
             filter = tuple(filter)
-            print("Adding using RGB tuple...")
+            if op == '+':
+                print("Adding using RGB tuple...")
+            elif op == '-':
+                print("Subtracting using RGB tuple...")
         else:
-            print("Adding using RGBA tuple...")
+            if op == '+':
+                print("Adding using RGBA tuple...")
+            elif op == '-':
+                filter = list(filter)
+                filter.pop(3)
+                filter = tuple(filter)
+
+                print("Subtracting using RGBA tuple...")
+
         #Using a generator, adds two tuples together then assigns the result to the pixel.
         for i in range(width):
             for j in range(height):
                 try:
-                    img[i, j] = tuple(l + r for l, r in zip(img[i, j], filter))
+                    img[i, j] = tuple(ops_func(op, l, r) for l, r in zip(img[i, j], filter))
                 except IndexError:
                     continue
     else:
-        print("Adding using pixels from another image...")
+        if op == '+':
+            print("Adding using pixels from another image...")
+        elif op == '-':
+            print("Subtracting using pixels from another image...")
         with Image.open(filter) as f: 
             i2 = f.load()
             if rgb == True:
@@ -36,50 +65,10 @@ def add(filter, image, rgb=False):
             for i in range(width):
                 for j in range(height):
                     try:
-                        img[i, j] = tuple(l + r for l, r in zip(img[i, j], i2[i, j]))
+                        img[i, j] = tuple(ops_func(op, l, r) for l, r in zip(img[i, j], i2[i, j]))
                     except IndexError:
                         continue
     return image 
-
-'''Simple function that subtracts pixels from an image and an
-RGBA tuple or pixels from two image, then returns the modified images.'''
-def subtract(filter, image, rgb=False):
-    img = image.load() #Third image instance thing for writing
-    width, height = image.size
-
-    #Detects if filter is 'red', 'green', 'blue', or a tuple. 
-    #If not, assumes another image is being added.
-    if filter in color_list or isinstance(filter, tuple):
-        print("Subtracting using RGBA tuple...")
-
-        #Removes the transparency value to avoid making the image transparent.
-        filter = list(filter)
-        filter.pop(3)
-        filter = tuple(filter)
-
-        #Using a generator, subtracts two tuples together then assigns the result to the pixel.
-        for i in range(width):
-            for j in range(height):
-                try:
-                    img[i, j] = tuple(l - r for l, r in zip(img[i, j], filter))
-                except IndexError:
-                    continue
-    else:
-        print("Subtracting using pixels from another image...")
-        with Image.open(filter) as f:
-            i2 = f.load()
-
-            if rgb == True:
-                i2 = i2.convert('RGB')
-
-            #Using a generator, adds subtracts two tuples together then assigns the result to the pixel.
-            for i in range(width):
-                for j in range(height):
-                    try:
-                        img[i, j] = tuple(l - r for l, r in zip(img[i, j], i2[i, j]))
-                    except IndexError:
-                        continue
-    return image  
 
 '''Multiplies the RGBA values from an image and an RGBA tuple or pixels from two images 
 by obtaining the ratio of the tuple/pixel to 255 then multiplying the image by the ratio, then returns the modified image.'''
@@ -191,9 +180,9 @@ def divide(filter, image, rgb=False):
 def func_sel(filter, func, image, rgb=False):
     rgb_bool = rgb
     if func == 'add':
-        result = add(filter, image, rgb=rgb_bool)
+        result = additive(filter, image, '+', rgb=rgb_bool)
     elif func == 'subtract':
-        result = subtract(filter, image, rgb=rgb_bool)
+        result = additive(filter, image, '-', rgb=rgb_bool)
     elif func == 'divide':
         result = divide(filter, image, rgb=rgb_bool)
     elif func == 'multiply':

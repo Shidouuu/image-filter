@@ -22,6 +22,10 @@ RGBA tuple or pixels from two images, then returns the modified image.'''
 def additive(filter, image, op, rgb=False):
     img = image.load() #Third image instance thing for writing
     width, height = image.size
+    if rgb == True:
+        cmode = "RGB"
+    else:
+        cmode = "RGBA"
 
     #Detects if filter is 'red', 'green', 'blue', or a tuple. 
     #If not, assumes another image is being added.
@@ -31,19 +35,13 @@ def additive(filter, image, op, rgb=False):
             filter = list(filter)
             filter.pop(3)
             filter = tuple(filter)
-            if op == '+':
-                print("Adding using RGB tuple...")
-            elif op == '-':
-                print("Subtracting using RGB tuple...")
-        else:
-            if op == '+':
-                print("Adding using RGBA tuple...")
-            elif op == '-':
-                filter = list(filter)
-                filter.pop(3)
-                filter = tuple(filter)
-
-                print("Subtracting using RGBA tuple...")
+        if op == '+':
+                print("Adding using" + cmode + "tuple...")
+        elif op == '-' and rgb == False:
+            filter = list(filter)
+            filter.pop(3)
+            filter = tuple(filter)
+            print("Subtracting using RGBA tuple...")
 
         #Using a generator, adds two tuples together then assigns the result to the pixel.
         for i in range(width):

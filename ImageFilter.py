@@ -35,13 +35,13 @@ def additive(filter, image, op, rgb=False):
             filter = list(filter)
             filter.pop(3)
             filter = tuple(filter)
-        if op == '+':
-                print("Adding using" + cmode + "tuple...")
-        elif op == '-' and rgb == False:
+        elif op == '-':
             filter = list(filter)
             filter.pop(3)
             filter = tuple(filter)
             print("Subtracting using RGBA tuple...")
+        if op == '+':
+                print("Adding using" + cmode + "tuple...")
 
         #Using a generator, adds two tuples together then assigns the result to the pixel.
         for i in range(width):

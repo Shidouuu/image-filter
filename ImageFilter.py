@@ -19,7 +19,7 @@ def ops_func(op_char, a, b):
 
 '''Adds or subtracts pixels from an image and an
 RGBA tuple or pixels from two images, then returns the modified image.'''
-def additive(filter, image, op, rgb=False):
+def blend(filter, image, op, rgb=False):
     img = image.load() #Third image instance thing for writing
     width, height = image.size
     if rgb == True:
@@ -27,34 +27,37 @@ def additive(filter, image, op, rgb=False):
     else:
         cmode = "RGBA"
 
+    op_dict = {"+": 'Adding', "-": 'Subtracting', "*": 'Multiplying', "x": 'Multiplying', "/": 'Dividing'}
+    for i in op_dict:
+        if op == i:
+            op_mode = op_dict[i]
+
     #Detects if filter is 'red', 'green', 'blue', or a tuple. 
     #If not, assumes another image is being added.
     if filter in color_list or isinstance(filter, tuple):
-        if rgb == True:
-            print(filter)
+        if rgb == True or op == '-':
             filter = list(filter)
             filter.pop(3)
             filter = tuple(filter)
-        elif op == '-':
-            filter = list(filter)
-            filter.pop(3)
-            filter = tuple(filter)
-            print("Subtracting using RGBA tuple...")
-        if op == '+':
-                print("Adding using" + cmode + "tuple...")
+
+        print(op_mode + " using " + cmode + " tuple...")
 
         #Using a generator, adds two tuples together then assigns the result to the pixel.
+        if op != '+' or op != '-':
+            coefficient = tuple(l / r for l, r in zip(filter, (255, 255, 255, 255)))
         for i in range(width):
             for j in range(height):
                 try:
-                    img[i, j] = tuple(ops_func(op, l, r) for l, r in zip(img[i, j], filter))
+                    if op == '+' or op == '-':
+                        img[i, j] = tuple(ops_func(op, l, r) for l, r in zip(img[i, j], filter))
+                    else:
+                            img[i, j] = tuple(round(ops_func(op, l, r)) for l, r in zip(img[i, j], coefficient))
                 except IndexError:
                     continue
+                except ZeroDivisionError:
+                    continue
     else:
-        if op == '+':
-            print("Adding using pixels from another image...")
-        elif op == '-':
-            print("Subtracting using pixels from another image...")
+        print(op_mode + " using pixels from another image...")
         with Image.open(filter) as f: 
             i2 = f.load()
             if rgb == True:
@@ -63,130 +66,21 @@ def additive(filter, image, op, rgb=False):
             for i in range(width):
                 for j in range(height):
                     try:
-                        img[i, j] = tuple(ops_func(op, l, r) for l, r in zip(img[i, j], i2[i, j]))
+                        if op == '+' or op == '-':
+                            img[i, j] = tuple(ops_func(op, l, r) for l, r in zip(img[i, j], i2[i, j]))
+                        else:
+                            coefficient = tuple(l / r for l, r in zip(i2[i, j], (255, 255, 255, 255)))
+                            img[i, j] = tuple(round(ops_func(op, l, r)) for l, r in zip(img[i, j], coefficient))
                     except IndexError:
+                        continue
+                    except ZeroDivisionError:
                         continue
     return image 
 
-'''Multiplies the RGBA values from an image and an RGBA tuple or pixels from two images 
-by obtaining the ratio of the tuple/pixel to 255 then multiplying the image by the ratio, then returns the modified image.'''
-def multiply(filter, image, rgb=False):
-    img = image.load() #Third image instance thing for writing
-    width, height = image.size
-
-    #Detects if filter is 'red', 'green', 'blue', or a tuple. 
-    #If not, assumes another image is being added.
-    if filter in color_list or isinstance(filter, tuple):
-        if rgb == True:
-            print(filter)
-            filter = list(filter)
-            filter.pop(3)
-            filter = tuple(filter)
-            print("Multiplying using RGB tuple...")
-        else:
-            print("Multiplying using RGBA tuple...")
-        for i in range(width):
-            for j in range(height):
-                try:
-                    #Obtains the "coefficient" by dividing the RGBA tuple by 255.
-                    coefficient = tuple(l / r for l, r in zip(filter, (255, 255, 255, 255)))
-
-                    #Using a generator, multiplies each pixel by the coefficient then rounds the result.
-                    img[i, j] = tuple(
-                        round(rf) for rf in (
-                            l * r for l, r in zip(img[i, j], coefficient)))
-                except IndexError:
-                    continue
-                except ZeroDivisionError:
-                    continue
-    else:
-        print("Multiplying using pixels from another image...")
-        with Image.open(filter) as f:
-            i2 = f.load()
-            if rgb == True:
-                i2 = i2.convert('RGB')
-            for i in range(width):
-                for j in range(height):
-                    try:
-                        #Obtains the "coefficient" by dividing the RGBA tuple by 255.
-                        coefficient = tuple(l / r for l, r in zip(i2[i, j], (255, 255, 255, 255)))
-
-                        #Using a generator, multiplies each pixel by the coefficient then rounds the result.
-                        img[i, j] = tuple(
-                            round(rf) for rf in (
-                                l * r for l, r in zip(img[i, j], coefficient)))
-                    except IndexError:
-                        continue
-                    except ZeroDivisionError:
-                        continue
-    return image
-
-'''Divides the RGBA values from an image and an RGBA tuple or pixels from two images 
-by obtaining the ratio of the tuple/pixel to 255 then dividing the image by the ratio, then returns the modified image.'''
-def divide(filter, image, rgb=False):
-    img = image.load() #Third image instance thing for writing
-    width, height = image.size
-
-    #Detects if filter is 'red', 'green', 'blue', or a tuple. 
-    #If not, assumes another image is being added.
-    if filter in color_list or isinstance(filter, tuple):
-        if rgb == True:
-            print(filter)
-            filter = list(filter)
-            filter.pop(3)
-            filter = tuple(filter)
-            print("Dividing using RGB tuple...")
-        else:
-            print("Dividing using RGBA tuple...")
-        for i in range(width):
-            for j in range(height):
-                try:
-                    #Obtains the "coefficient" by dividing the RGBA tuple by 255.
-                    coefficient = tuple(l / r for l, r in zip(filter, (255, 255, 255, 255)))
-
-                    #Using a generator, divides each pixel by the coefficient then rounds the result.
-                    img[i, j] = tuple(
-                        round(rf) for rf in (
-                            l / r for l, r in zip(img[i, j], coefficient)))
-                except IndexError:
-                    continue
-                except ZeroDivisionError:
-                    continue
-    else:
-        print("Dividing using pixels from another image...")
-        with Image.open(filter) as f:
-            i2 = f.load()
-            if rgb == True:
-                i2 = i2.convert('RGB')
-            for i in range(width):
-                for j in range(height):
-                    try:
-                        #Obtains the "coefficient" by dividing the RGBA tuple by 255.
-                        coefficient = tuple(l / r for l, r in zip(i2[i, j], (255, 255, 255, 255)))
-
-                        #Using a generator, divides each pixel by the coefficient then rounds the result.
-                        img[i, j] = tuple(
-                            round(rf) for rf in (
-                                l / r for l, r in zip(img[i, j], coefficient)))
-                    except IndexError:
-                        continue
-                    except ZeroDivisionError:
-                        continue
-    return image
-
 '''Function that allows for a secure way to call the functions above. Returns the return values of the functions called.'''
-def func_sel(filter, func, image, rgb=False):
-    rgb_bool = rgb
-    if func == 'add':
-        result = additive(filter, image, '+', rgb=rgb_bool)
-    elif func == 'subtract':
-        result = additive(filter, image, '-', rgb=rgb_bool)
-    elif func == 'divide':
-        result = divide(filter, image, rgb=rgb_bool)
-    elif func == 'multiply':
-        result = multiply(filter, image, rgb=rgb_bool)
-    return result
-
+def func_sel(filter, func, image, cmode=False):
+    blend_dict = {'add': '+', 'subtract': '-', 'multiply': 'x', 'divide': '/'}
+    return blend(filter, image, blend_dict[func], rgb=cmode)
 
 if __name__ == '__main__':
     red = (255, 0, 0, 255)

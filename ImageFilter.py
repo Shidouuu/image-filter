@@ -2,16 +2,21 @@ from PIL import Image
 from ast import literal_eval
 import os.path
 import operator
+import argparse
 
-#Allows operators to be used for an argument of a function, 
-#letting add/subtract and multiply/divide be combined into one function.
- 
+red = (255, 0, 0, 255)
+green = (0, 255, 0, 255)
+blue = (0, 0, 255, 255)
+
+color_list = [red, green, blue]
+
 '''Computes two numbers using a given operator.'''
 def ops_func(op_char, a, b):
     ops = {
     "+": operator.add,
     "-": operator.sub,
     "*": operator.mul,
+    "x": operator.mul,
     "/": operator.truediv
     }  
     func = ops[op_char]
@@ -77,18 +82,39 @@ def blend(filter, image, op, rgb=False):
                         continue
     return image 
 
+
 '''Function that allows for a secure way to call the functions above. Returns the return values of the functions called.'''
 def func_sel(filter, func, image, cmode=False):
     blend_dict = {'add': '+', 'subtract': '-', 'multiply': 'x', 'divide': '/'}
     return blend(filter, image, blend_dict[func], rgb=cmode)
 
+
+
+parser = argparse.ArgumentParser(description='Image Filter')
+parser.add_argument('-i', '--image', help='Image to be modified.', required=False, default='dermott')
+parser.add_argument('-f', '--filter', help='Either a second image or an RGBA tuple.', required=False)
+parser.add_argument('-o', '--output', help='Output file name.', required=False, default= 'result')
+parser.add_argument('-fo', '--format', help='Output file format.', required=False, default= 'png')
+parser.add_argument('-m', '--mode', help='Color mode.', required=False, default='RGBA', choices=['RGBA', 'RGB'])
+parser.add_argument('-b', '--blend', help='Blend mode.', required=False, choices=['add', 'subtract', 'multiply', 'divide'])
+args = parser.parse_args()
+arg_list = vars(args).values()
+print(arg_list)
+default_args = ['dermott', 'result', 'png', 'RGBA']
+
+for i in arg_list:
+    if i != None and i not in default_args:
+        if args.image == 'dermott':
+            im = Image.open('mcdermott.png')
+        elif os.path.isfile(args.image):
+            im = Image.open(args.image)
+        else:
+            raise FileNotFoundError('File not found.')
+        result = func_sel(args.filter, args.blend, im, args.mode)
+        result.save(args.output + '.' + args.format)
+        exit()
+
 if __name__ == '__main__':
-    red = (255, 0, 0, 255)
-    green = (0, 255, 0, 255)
-    blue = (0, 0, 255, 255)
-
-    color_list = [red, green, blue]
-
     img_sel = None
     while img_sel == None:
         img_sel = input('Select an image from the current directory, or press enter to use a picture of Mr.McDermott: ')
@@ -156,3 +182,6 @@ if __name__ == '__main__':
     print("Saving...")
     result.save(name + format)
     print("Done!")
+    
+
+

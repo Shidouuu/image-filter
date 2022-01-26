@@ -22,8 +22,7 @@ def ops_func(op_char, a, b):
     func = ops[op_char]
     return func(a, b)
 
-'''Adds or subtracts pixels from an image and an
-RGBA tuple or pixels from two images, then returns the modified image.'''
+'''Adds, subtracts, multiplies, or divides the pixels of an image and a tuple or the pixels of two images.'''
 def blend(filter, image, op, rgb=False):
     img = image.load() #Third image instance thing for writing
     width, height = image.size

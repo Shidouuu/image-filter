@@ -96,10 +96,9 @@ parser.add_argument('-f', '--filter', help='Either a second image or an RGBA tup
 parser.add_argument('-o', '--output', help='Output file name.', required=False, default= 'result')
 parser.add_argument('-fo', '--format', help='Output file format.', required=False, default= 'png')
 parser.add_argument('-m', '--mode', help='Color mode.', required=False, default='RGBA', choices=['RGBA', 'RGB'])
-parser.add_argument('-b', '--blend', help='Blend mode.', required=False, choices=['add', 'subtract', 'multiply', 'divide'])
+parser.add_argument('-b', '--blend', help='Blend mode.', required=False, choices=['add', 'subtract', 'multiply', 'mul', 'divide', 'div'])
 args = parser.parse_args()
 arg_list = vars(args).values()
-print(arg_list)
 default_args = ['dermott', 'result', 'png', 'RGBA']
 
 for i in arg_list:

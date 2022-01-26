@@ -4,6 +4,7 @@ import os.path
 import operator
 import argparse
 
+#Predefine colors incase you're too lazy to type up a tuple.
 red = (255, 0, 0, 255)
 green = (0, 255, 0, 255)
 blue = (0, 0, 255, 255)
@@ -22,7 +23,7 @@ def ops_func(op_char, a, b):
     func = ops[op_char]
     return func(a, b)
 
-'''Adds, subtracts, multiplies, or divides the pixels of an image and a tuple or the pixels of two images.'''
+'''Adds, subtracts, multiplies, or divides the pixels of an image and a tuple or the pixels of two images, then returns the result.'''
 def blend(filter, image, op, rgb=False):
     img = image.load() #Third image instance thing for writing
     width, height = image.size
@@ -31,6 +32,7 @@ def blend(filter, image, op, rgb=False):
     else:
         cmode = "RGBA"
 
+    #Dict for identifying which operation to use.
     op_dict = {"+": 'Adding', "-": 'Subtracting', "*": 'Multiplying', "x": 'Multiplying', "/": 'Dividing'}
     for i in op_dict:
         if op == i:
@@ -48,13 +50,14 @@ def blend(filter, image, op, rgb=False):
 
         #Using a generator, adds two tuples together then assigns the result to the pixel.
         if op != '+' or op != '-':
-            coefficient = tuple(l / r for l, r in zip(filter, (255, 255, 255, 255)))
+            #"Coefficient" which is the ratio of the filter to 255
+            coefficient = tuple(l / r for l, r in zip(filter, (255, 255, 255, 255))) 
         for i in range(width):
             for j in range(height):
                 try:
                     if op == '+' or op == '-':
                         img[i, j] = tuple(ops_func(op, l, r) for l, r in zip(img[i, j], filter))
-                    else:
+                    else: #rounds when multiplying or dividing
                             img[i, j] = tuple(round(ops_func(op, l, r)) for l, r in zip(img[i, j], coefficient))
                 except IndexError:
                     continue
@@ -72,7 +75,8 @@ def blend(filter, image, op, rgb=False):
                     try:
                         if op == '+' or op == '-':
                             img[i, j] = tuple(ops_func(op, l, r) for l, r in zip(img[i, j], i2[i, j]))
-                        else:
+                        else: #rounds when multiplying or dividing
+                            #"Coefficient" which is the ratio of the filter to 255
                             coefficient = tuple(l / r for l, r in zip(i2[i, j], (255, 255, 255, 255)))
                             img[i, j] = tuple(round(ops_func(op, l, r)) for l, r in zip(img[i, j], coefficient))
                     except IndexError:
@@ -88,7 +92,7 @@ def func_sel(filter, func, image, cmode=False):
     return blend(filter, image, blend_dict[func], rgb=cmode)
 
 
-
+#Defines args to be used in terminal.
 parser = argparse.ArgumentParser(description='Image Filter')
 parser.add_argument('-i', '--image', help='Image to be modified.', required=False, default='dermott')
 parser.add_argument('-f', '--filter', help='Either a second image or an RGBA tuple.', required=False)
@@ -100,6 +104,7 @@ args = parser.parse_args()
 arg_list = vars(args).values()
 default_args = ['dermott', 'result', 'png', 'RGBA']
 
+#Parses args then calls func_sel()
 for i in arg_list:
     if i != None and i not in default_args:
         if args.image == 'dermott':
@@ -112,6 +117,7 @@ for i in arg_list:
         result.save(args.output + '.' + args.format)
         exit()
 
+#If no arguments are given, defaults to dumb mode and prompts user for inputs
 if __name__ == '__main__':
     img_sel = None
     while img_sel == None:
@@ -125,7 +131,7 @@ if __name__ == '__main__':
             img_sel = None
             continue
 
-    color_strlist = ['red', 'green', 'blue']
+    color_strlist = ['red', 'green', 'blue'] #For checking if user input is red, green, or blue
     
     img2 = None
     while img2 == None:
@@ -138,7 +144,7 @@ if __name__ == '__main__':
     blend_type = None
     while blend_type == None:
         blend_type = (input("Select a blend mode: Add | Subtract | Multiply | Divide\n")).lower()
-        if blend_type not in blend_list:
+        if blend_type not in blend_list: #Check if blend mode is valid
             print("Not a blend mode. Try again.")
             blend_type = None
     
@@ -159,6 +165,7 @@ if __name__ == '__main__':
         format = '.' + format
 
 
+    #Determines proper variables to call func_sel() with
     if img2 in color_strlist:
         color_index = color_strlist.index(img2)
         result = func_sel(color_list[color_index], blend_type, im)
